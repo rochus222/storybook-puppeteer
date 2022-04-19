@@ -1,0 +1,26 @@
+version: '3.1'
+
+services:
+  storybook:
+    image: node:latest
+    ports:
+    - 6006:6006
+    volumes:
+      - ./:/app
+    command: 
+        bash -c "npm install -g http-server && 
+            cd /app 
+            && npx build-storybook 
+            && http-server /app/storybook-static -p 6006"
+
+  tests:   
+    image: alekzonder/puppeteer:latest
+    volumes:
+        - ./:/app
+    environment: 
+        APP_HOST: storybook    
+    depends_on:
+        - storybook
+    command: 
+      bash -c "/app/wait-for-it.sh --timeout=0 storybook:6006 && cd /app &&
+      yarn test"
